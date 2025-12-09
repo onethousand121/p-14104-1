@@ -4,6 +4,8 @@ import com.back.domain.post.post.dto.PostDto;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
 import com.back.global.rsData.RsData;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,11 +18,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/posts")
 @RequiredArgsConstructor
+@Tag(name = "ApiV1PostController", description = "API 글 컨트롤러")
 public class ApiV1PostController {
     private final PostService postService;
 
     @GetMapping
     @Transactional(readOnly = true)
+    @Operation(summary = "다건 조회")
     public List<PostDto> getItems() {
         List<Post> items = postService.findAll();
 
@@ -32,6 +36,7 @@ public class ApiV1PostController {
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
+    @Operation(summary = "단건 조회")
     public PostDto getItem(@PathVariable int id) {
         Post post = postService.findById(id).get();
 
@@ -40,6 +45,7 @@ public class ApiV1PostController {
 
     @DeleteMapping("/{id}")
     @Transactional
+    @Operation(summary = "삭제")
     public RsData<Void> delete(@PathVariable int id) {
         Post post = postService.findById(id).get();
 
@@ -62,24 +68,16 @@ public class ApiV1PostController {
     ) {
     }
 
-    record PostWriteResBody(
-            long totalCount,
-            PostDto post
-    ) {
-    }
-
     @PostMapping
     @Transactional
-    public RsData<PostWriteResBody> write(@Valid @RequestBody PostWriteReqBody reqBody) {
+    @Operation(summary = "작성")
+    public RsData<PostDto> write(@Valid @RequestBody PostWriteReqBody reqBody) {
         Post post = postService.write(reqBody.title, reqBody.content);
 
         return new RsData<>(
                 "201-1",
                 "%d번 글이 작성되었습니다.".formatted(post.getId()),
-                new PostWriteResBody(
-                        postService.count(),
-                        new PostDto(post)
-                )
+                new PostDto(post)
         );
     }
 
@@ -95,13 +93,13 @@ public class ApiV1PostController {
 
     @PutMapping("/{id}")
     @Transactional
+    @Operation(summary = "수정")
     public RsData<Void> modify(
             @PathVariable int id,
             @Valid @RequestBody PostModifyReqBody reqBody
     ) {
         Post post = postService.findById(id).get();
         postService.modify(post, reqBody.title, reqBody.content);
-
 
         return new RsData<>(
                 "200-1",
